@@ -297,30 +297,35 @@ function VaccinationDialog({
   onOpenChange,
   petId,
   prefill,
+  editVaccination,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   petId: number;
   prefill?: { name?: string; date?: string; notes?: string; sourceEventId?: number };
+  editVaccination?: Vaccination;
 }) {
   const { toast } = useToast();
-  const [name, setName] = useState(prefill?.name || "");
-  const [dateAdministered, setDateAdministered] = useState(prefill?.date || format(new Date(), "yyyy-MM-dd"));
-  const [nextDueDate, setNextDueDate] = useState(
-    prefill?.date ? format(addYears(parseISO(prefill.date), 1), "yyyy-MM-dd") : format(addYears(new Date(), 1), "yyyy-MM-dd")
+  const isEditing = !!editVaccination;
+  const [name, setName] = useState(editVaccination?.name || prefill?.name || "");
+  const [dateAdministered, setDateAdministered] = useState(
+    editVaccination?.dateAdministered || prefill?.date || format(new Date(), "yyyy-MM-dd")
   );
-  const [veterinarian, setVeterinarian] = useState("");
-  const [notes, setNotes] = useState(prefill?.notes || "");
+  const [nextDueDate, setNextDueDate] = useState(
+    editVaccination?.nextDueDate || (prefill?.date ? format(addYears(parseISO(prefill.date), 1), "yyyy-MM-dd") : format(addYears(new Date(), 1), "yyyy-MM-dd"))
+  );
+  const [veterinarian, setVeterinarian] = useState(editVaccination?.veterinarian || "");
+  const [notes, setNotes] = useState(editVaccination?.notes || prefill?.notes || "");
 
   const mutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiRequest("POST", `/api/pets/${petId}/vaccinations`, data),
+      isEditing
+        ? apiRequest("PATCH", `/api/vaccinations/${editVaccination.id}`, data)
+        : apiRequest("POST", `/api/pets/${petId}/vaccinations`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pets", petId, "vaccinations"] });
-      toast({ title: "Vaccination recorded" });
+      toast({ title: isEditing ? "Vaccination updated" : "Vaccination recorded" });
       onOpenChange(false);
-      setName("");
-      setNotes("");
     },
     onError: (error: Error) => {
       toast({ title: error.message, variant: "destructive" });
@@ -331,19 +336,22 @@ function VaccinationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Record Vaccination</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Vaccination" : "Record Vaccination"}</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            mutation.mutate({
+            const payload: Record<string, unknown> = {
               name,
               dateAdministered,
               nextDueDate: nextDueDate || null,
               veterinarian: veterinarian || null,
               notes: notes || null,
-              sourceEventId: prefill?.sourceEventId || null,
-            });
+            };
+            if (!isEditing) {
+              payload.sourceEventId = prefill?.sourceEventId || null;
+            }
+            mutation.mutate(payload);
           }}
           className="space-y-4"
         >
@@ -370,7 +378,7 @@ function VaccinationDialog({
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any additional details..." className="resize-none" data-testid="input-vaccination-notes" />
           </div>
           <Button type="submit" className="w-full" disabled={mutation.isPending} data-testid="button-submit-vaccination">
-            {mutation.isPending ? "Saving..." : "Record Vaccination"}
+            {mutation.isPending ? "Saving..." : isEditing ? "Update Vaccination" : "Record Vaccination"}
           </Button>
         </form>
       </DialogContent>
@@ -383,32 +391,33 @@ function MedicationDialog({
   onOpenChange,
   petId,
   prefill,
+  editMedication,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   petId: number;
   prefill?: { name?: string; date?: string; notes?: string; sourceEventId?: number };
+  editMedication?: Medication;
 }) {
   const { toast } = useToast();
-  const [name, setName] = useState(prefill?.name || "");
-  const [dosage, setDosage] = useState("");
-  const [frequency, setFrequency] = useState("");
-  const [startDate, setStartDate] = useState(prefill?.date || format(new Date(), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState("");
-  const [prescribedBy, setPrescribedBy] = useState("");
-  const [notes, setNotes] = useState(prefill?.notes || "");
+  const isEditing = !!editMedication;
+  const [name, setName] = useState(editMedication?.name || prefill?.name || "");
+  const [dosage, setDosage] = useState(editMedication?.dosage || "");
+  const [frequency, setFrequency] = useState(editMedication?.frequency || "");
+  const [startDate, setStartDate] = useState(editMedication?.startDate || prefill?.date || format(new Date(), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(editMedication?.endDate || "");
+  const [prescribedBy, setPrescribedBy] = useState(editMedication?.prescribedBy || "");
+  const [notes, setNotes] = useState(editMedication?.notes || prefill?.notes || "");
 
   const mutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiRequest("POST", `/api/pets/${petId}/medications`, data),
+      isEditing
+        ? apiRequest("PATCH", `/api/medications/${editMedication.id}`, data)
+        : apiRequest("POST", `/api/pets/${petId}/medications`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pets", petId, "medications"] });
-      toast({ title: "Medication recorded" });
+      toast({ title: isEditing ? "Medication updated" : "Medication recorded" });
       onOpenChange(false);
-      setName("");
-      setDosage("");
-      setFrequency("");
-      setNotes("");
     },
     onError: (error: Error) => {
       toast({ title: error.message, variant: "destructive" });
@@ -419,12 +428,12 @@ function MedicationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Record Medication</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Medication" : "Record Medication"}</DialogTitle>
         </DialogHeader>
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            mutation.mutate({
+            const payload: Record<string, unknown> = {
               name,
               dosage: dosage || null,
               frequency: frequency || null,
@@ -432,9 +441,12 @@ function MedicationDialog({
               endDate: endDate || null,
               prescribedBy: prescribedBy || null,
               notes: notes || null,
-              active: true,
-              sourceEventId: prefill?.sourceEventId || null,
-            });
+            };
+            if (!isEditing) {
+              payload.active = true;
+              payload.sourceEventId = prefill?.sourceEventId || null;
+            }
+            mutation.mutate(payload);
           }}
           className="space-y-4"
         >
@@ -480,7 +492,7 @@ function MedicationDialog({
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any additional details..." className="resize-none" data-testid="input-medication-notes" />
           </div>
           <Button type="submit" className="w-full" disabled={mutation.isPending} data-testid="button-submit-medication">
-            {mutation.isPending ? "Saving..." : "Record Medication"}
+            {mutation.isPending ? "Saving..." : isEditing ? "Update Medication" : "Record Medication"}
           </Button>
         </form>
       </DialogContent>
@@ -501,6 +513,8 @@ export default function PetDetailPage() {
   const [showMedicationDialog, setShowMedicationDialog] = useState(false);
   const [vaccinationPrefill, setVaccinationPrefill] = useState<{ name?: string; date?: string; notes?: string; sourceEventId?: number } | undefined>();
   const [medicationPrefill, setMedicationPrefill] = useState<{ name?: string; date?: string; notes?: string; sourceEventId?: number } | undefined>();
+  const [editingVaccination, setEditingVaccination] = useState<Vaccination | undefined>();
+  const [editingMedication, setEditingMedication] = useState<Medication | undefined>();
 
   const { data: pet, isLoading: petLoading } = useQuery<Pet>({
     queryKey: ["/api/pets", petId],
@@ -634,6 +648,7 @@ export default function PetDetailPage() {
   upcomingItems.sort((a, b) => a.daysUntil - b.daysUntil);
 
   const openVaccinationFromEvent = (event: EventWithPets) => {
+    setEditingVaccination(undefined);
     setVaccinationPrefill({
       name: event.title,
       date: event.eventDate,
@@ -644,6 +659,7 @@ export default function PetDetailPage() {
   };
 
   const openMedicationFromEvent = (event: EventWithPets) => {
+    setEditingMedication(undefined);
     setMedicationPrefill({
       name: event.title,
       date: event.eventDate,
@@ -877,6 +893,7 @@ export default function PetDetailPage() {
                   variant="outline"
                   onClick={() => {
                     setVaccinationPrefill(undefined);
+                    setEditingVaccination(undefined);
                     setShowVaccinationDialog(true);
                   }}
                   data-testid="button-add-vaccination"
@@ -917,11 +934,24 @@ export default function PetDetailPage() {
                             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{vax.notes}</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0">
                           <Badge variant={status.variant}>
                             <StatusIcon className="h-3 w-3 mr-1" />
                             {status.label}
                           </Badge>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              setEditingVaccination(vax);
+                              setVaccinationPrefill(undefined);
+                              setShowVaccinationDialog(true);
+                            }}
+                            title="Edit vaccination"
+                            data-testid={`button-edit-vaccination-${vax.id}`}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
                           <Button
                             size="icon"
                             variant="ghost"
@@ -945,6 +975,7 @@ export default function PetDetailPage() {
                     className="mt-2"
                     onClick={() => {
                       setVaccinationPrefill(undefined);
+                      setEditingVaccination(undefined);
                       setShowVaccinationDialog(true);
                     }}
                   >
@@ -964,6 +995,7 @@ export default function PetDetailPage() {
                   variant="outline"
                   onClick={() => {
                     setMedicationPrefill(undefined);
+                    setEditingMedication(undefined);
                     setShowMedicationDialog(true);
                   }}
                   data-testid="button-add-medication"
@@ -1007,6 +1039,19 @@ export default function PetDetailPage() {
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <Badge variant="default">Active</Badge>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => {
+                                setEditingMedication(med);
+                                setMedicationPrefill(undefined);
+                                setShowMedicationDialog(true);
+                              }}
+                              title="Edit medication"
+                              data-testid={`button-edit-medication-${med.id}`}
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
                             <Button
                               size="icon"
                               variant="ghost"
@@ -1062,6 +1107,19 @@ export default function PetDetailPage() {
                             <Button
                               size="icon"
                               variant="ghost"
+                              onClick={() => {
+                                setEditingMedication(med);
+                                setMedicationPrefill(undefined);
+                                setShowMedicationDialog(true);
+                              }}
+                              title="Edit medication"
+                              data-testid={`button-edit-medication-past-${med.id}`}
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
                               onClick={() => toggleMedicationMutation.mutate({ id: med.id, active: true })}
                               title="Reactivate"
                               data-testid={`button-reactivate-medication-${med.id}`}
@@ -1092,6 +1150,7 @@ export default function PetDetailPage() {
                     className="mt-2"
                     onClick={() => {
                       setMedicationPrefill(undefined);
+                      setEditingMedication(undefined);
                       setShowMedicationDialog(true);
                     }}
                   >
@@ -1151,24 +1210,32 @@ export default function PetDetailPage() {
       <WeightDialog open={showWeightDialog} onOpenChange={setShowWeightDialog} petId={petId} />
       {pet && <EditPetDialog open={showEditDialog} onOpenChange={setShowEditDialog} pet={pet} />}
       <VaccinationDialog
-        key={`vax-${vaccinationPrefill?.sourceEventId || "new"}`}
+        key={`vax-${editingVaccination?.id || vaccinationPrefill?.sourceEventId || "new"}`}
         open={showVaccinationDialog}
         onOpenChange={(open) => {
           setShowVaccinationDialog(open);
-          if (!open) setVaccinationPrefill(undefined);
+          if (!open) {
+            setVaccinationPrefill(undefined);
+            setEditingVaccination(undefined);
+          }
         }}
         petId={petId}
         prefill={vaccinationPrefill}
+        editVaccination={editingVaccination}
       />
       <MedicationDialog
-        key={`med-${medicationPrefill?.sourceEventId || "new"}`}
+        key={`med-${editingMedication?.id || medicationPrefill?.sourceEventId || "new"}`}
         open={showMedicationDialog}
         onOpenChange={(open) => {
           setShowMedicationDialog(open);
-          if (!open) setMedicationPrefill(undefined);
+          if (!open) {
+            setMedicationPrefill(undefined);
+            setEditingMedication(undefined);
+          }
         }}
         petId={petId}
         prefill={medicationPrefill}
+        editMedication={editingMedication}
       />
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
