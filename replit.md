@@ -27,6 +27,8 @@ A fullstack pet care management system for tracking multiple pets with health re
 - `client/src/pages/settings.tsx` - Settings placeholder
 
 ## Recent Changes
+- 2026-02-14: Added 13 new pet profile fields (microchip #/location, vet name, parents, hair length, desexed, food brand/amount/meals/bowl colour, yearly vaccination date, traits) with Profile Details card on pet detail page and expanded edit dialog
+- 2026-02-13: Added edit functionality for vaccinations and medications with pre-filled dialogs
 - 2026-02-13: Added vaccination and medication tracking with tabbed pet profile, status badges, quick-create from vet visits, and upcoming health events summary
 - 2026-02-10: Fixed Express v5 path-to-regexp incompatibility for object storage route
 - 2026-02-10: Added Zod validation to all POST/PATCH API routes
