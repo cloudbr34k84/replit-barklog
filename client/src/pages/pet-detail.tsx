@@ -97,7 +97,7 @@ function getVaccinationStatus(vax: Vaccination): { label: string; variant: "defa
 
 function ProfileField({ label, value, testId }: { label: string; value: string | null | undefined; testId: string }) {
   return (
-    <div className="py-2.5 border-b last:border-b-0" data-testid={testId}>
+    <div className="py-2" data-testid={testId}>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-sm font-medium mt-0.5">{value || <span className="text-muted-foreground italic">Not set</span>}</p>
     </div>
@@ -108,7 +108,7 @@ function ProfileSection({ title, children }: { title: string; children: React.Re
   return (
     <div>
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{title}</p>
-      <div>{children}</div>
+      <div className="grid grid-cols-2 gap-x-6">{children}</div>
     </div>
   );
 }
