@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
-import { insertPetSchema, insertWeightEntrySchema, insertEventSchema } from "@shared/schema";
+import { insertPetSchema, insertWeightEntrySchema, insertEventSchema, insertVaccinationSchema, insertMedicationSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
 export async function registerRoutes(
@@ -121,6 +121,90 @@ export async function registerRoutes(
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ error: "Invalid event ID" });
     await storage.deleteEvent(id);
+    res.status(204).send();
+  });
+
+  // --- Vaccinations ---
+  app.get("/api/pets/:id/vaccinations", async (req, res) => {
+    const petId = parseInt(req.params.id);
+    if (isNaN(petId)) return res.status(400).json({ error: "Invalid pet ID" });
+    const records = await storage.getVaccinationsByPet(petId);
+    res.json(records);
+  });
+
+  app.post("/api/pets/:id/vaccinations", async (req, res) => {
+    const petId = parseInt(req.params.id);
+    if (isNaN(petId)) return res.status(400).json({ error: "Invalid pet ID" });
+    try {
+      const validatedData = insertVaccinationSchema.parse({ ...req.body, petId });
+      const record = await storage.createVaccination(validatedData);
+      res.status(201).json(record);
+    } catch (error: any) {
+      if (error instanceof ZodError) return res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/vaccinations/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid vaccination ID" });
+    try {
+      const validatedData = insertVaccinationSchema.partial().parse(req.body);
+      const record = await storage.updateVaccination(id, validatedData);
+      if (!record) return res.status(404).json({ error: "Vaccination not found" });
+      res.json(record);
+    } catch (error: any) {
+      if (error instanceof ZodError) return res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/vaccinations/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid vaccination ID" });
+    await storage.deleteVaccination(id);
+    res.status(204).send();
+  });
+
+  // --- Medications ---
+  app.get("/api/pets/:id/medications", async (req, res) => {
+    const petId = parseInt(req.params.id);
+    if (isNaN(petId)) return res.status(400).json({ error: "Invalid pet ID" });
+    const records = await storage.getMedicationsByPet(petId);
+    res.json(records);
+  });
+
+  app.post("/api/pets/:id/medications", async (req, res) => {
+    const petId = parseInt(req.params.id);
+    if (isNaN(petId)) return res.status(400).json({ error: "Invalid pet ID" });
+    try {
+      const validatedData = insertMedicationSchema.parse({ ...req.body, petId });
+      const record = await storage.createMedication(validatedData);
+      res.status(201).json(record);
+    } catch (error: any) {
+      if (error instanceof ZodError) return res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/medications/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid medication ID" });
+    try {
+      const validatedData = insertMedicationSchema.partial().parse(req.body);
+      const record = await storage.updateMedication(id, validatedData);
+      if (!record) return res.status(404).json({ error: "Medication not found" });
+      res.json(record);
+    } catch (error: any) {
+      if (error instanceof ZodError) return res.status(400).json({ error: error.errors });
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/medications/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid medication ID" });
+    await storage.deleteMedication(id);
     res.status(204).send();
   });
 

@@ -12,7 +12,7 @@ A fullstack pet care management system for tracking multiple pets with health re
 - **Validation**: Zod schemas via drizzle-zod on all API endpoints
 
 ## Key Files
-- `shared/schema.ts` - Database models (pets, weightEntries, events, petEvents) + insert schemas
+- `shared/schema.ts` - Database models (pets, weightEntries, events, petEvents, vaccinations, medications) + insert schemas
 - `server/routes.ts` - API routes with Zod validation
 - `server/storage.ts` - Database storage interface (IStorage)
 - `server/seed.ts` - Seed data (3 pets, 18 weight entries, 6 events)
@@ -27,6 +27,7 @@ A fullstack pet care management system for tracking multiple pets with health re
 - `client/src/pages/settings.tsx` - Settings placeholder
 
 ## Recent Changes
+- 2026-02-13: Added vaccination and medication tracking with tabbed pet profile, status badges, quick-create from vet visits, and upcoming health events summary
 - 2026-02-10: Fixed Express v5 path-to-regexp incompatibility for object storage route
 - 2026-02-10: Added Zod validation to all POST/PATCH API routes
 - 2026-02-10: Fixed RichTextEditor toolbar buttons to use Button size="icon" without manual h/w classes

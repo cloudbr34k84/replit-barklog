@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, date, real, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, date, real, pgEnum, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -65,10 +65,49 @@ export const petEventRelations = relations(petEvents, ({ one }) => ({
   event: one(events, { fields: [petEvents.eventId], references: [events.id] }),
 }));
 
+export const vaccinations = pgTable("vaccinations", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  petId: integer("pet_id").notNull().references(() => pets.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  dateAdministered: date("date_administered").notNull(),
+  nextDueDate: date("next_due_date"),
+  veterinarian: text("veterinarian"),
+  notes: text("notes"),
+  sourceEventId: integer("source_event_id").references(() => events.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const vaccinationRelations = relations(vaccinations, ({ one }) => ({
+  pet: one(pets, { fields: [vaccinations.petId], references: [pets.id] }),
+  sourceEvent: one(events, { fields: [vaccinations.sourceEventId], references: [events.id] }),
+}));
+
+export const medications = pgTable("medications", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  petId: integer("pet_id").notNull().references(() => pets.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  dosage: text("dosage"),
+  frequency: text("frequency"),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  prescribedBy: text("prescribed_by"),
+  notes: text("notes"),
+  active: boolean("active").notNull().default(true),
+  sourceEventId: integer("source_event_id").references(() => events.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const medicationRelations = relations(medications, ({ one }) => ({
+  pet: one(pets, { fields: [medications.petId], references: [pets.id] }),
+  sourceEvent: one(events, { fields: [medications.sourceEventId], references: [events.id] }),
+}));
+
 export const insertPetSchema = createInsertSchema(pets).omit({ id: true });
 export const insertWeightEntrySchema = createInsertSchema(weightEntries).omit({ id: true });
 export const insertEventSchema = createInsertSchema(events).omit({ id: true, createdAt: true });
 export const insertPetEventSchema = createInsertSchema(petEvents).omit({ id: true });
+export const insertVaccinationSchema = createInsertSchema(vaccinations).omit({ id: true, createdAt: true });
+export const insertMedicationSchema = createInsertSchema(medications).omit({ id: true, createdAt: true });
 
 export type Pet = typeof pets.$inferSelect;
 export type InsertPet = z.infer<typeof insertPetSchema>;
@@ -78,5 +117,9 @@ export type Event = typeof events.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type PetEvent = typeof petEvents.$inferSelect;
 export type InsertPetEvent = z.infer<typeof insertPetEventSchema>;
+export type Vaccination = typeof vaccinations.$inferSelect;
+export type InsertVaccination = z.infer<typeof insertVaccinationSchema>;
+export type Medication = typeof medications.$inferSelect;
+export type InsertMedication = z.infer<typeof insertMedicationSchema>;
 
 export type EventWithPets = Event & { pets: Pet[] };

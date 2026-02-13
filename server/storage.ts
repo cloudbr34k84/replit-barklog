@@ -3,6 +3,8 @@ import {
   weightEntries,
   events,
   petEvents,
+  vaccinations,
+  medications,
   type Pet,
   type InsertPet,
   type WeightEntry,
@@ -10,6 +12,10 @@ import {
   type Event,
   type InsertEvent,
   type EventWithPets,
+  type Vaccination,
+  type InsertVaccination,
+  type Medication,
+  type InsertMedication,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc } from "drizzle-orm";
@@ -29,6 +35,16 @@ export interface IStorage {
   getEventsByPet(petId: number): Promise<EventWithPets[]>;
   createEvent(event: InsertEvent, petIds: number[]): Promise<Event>;
   deleteEvent(id: number): Promise<void>;
+
+  getVaccinationsByPet(petId: number): Promise<Vaccination[]>;
+  createVaccination(data: InsertVaccination): Promise<Vaccination>;
+  updateVaccination(id: number, data: Partial<InsertVaccination>): Promise<Vaccination | undefined>;
+  deleteVaccination(id: number): Promise<void>;
+
+  getMedicationsByPet(petId: number): Promise<Medication[]>;
+  createMedication(data: InsertMedication): Promise<Medication>;
+  updateMedication(id: number, data: Partial<InsertMedication>): Promise<Medication | undefined>;
+  deleteMedication(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -137,6 +153,50 @@ export class DatabaseStorage implements IStorage {
   async deleteEvent(id: number): Promise<void> {
     await db.delete(petEvents).where(eq(petEvents.eventId, id));
     await db.delete(events).where(eq(events.id, id));
+  }
+
+  async getVaccinationsByPet(petId: number): Promise<Vaccination[]> {
+    return db
+      .select()
+      .from(vaccinations)
+      .where(eq(vaccinations.petId, petId))
+      .orderBy(desc(vaccinations.dateAdministered));
+  }
+
+  async createVaccination(data: InsertVaccination): Promise<Vaccination> {
+    const [created] = await db.insert(vaccinations).values(data).returning();
+    return created;
+  }
+
+  async updateVaccination(id: number, data: Partial<InsertVaccination>): Promise<Vaccination | undefined> {
+    const [updated] = await db.update(vaccinations).set(data).where(eq(vaccinations.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteVaccination(id: number): Promise<void> {
+    await db.delete(vaccinations).where(eq(vaccinations.id, id));
+  }
+
+  async getMedicationsByPet(petId: number): Promise<Medication[]> {
+    return db
+      .select()
+      .from(medications)
+      .where(eq(medications.petId, petId))
+      .orderBy(desc(medications.startDate));
+  }
+
+  async createMedication(data: InsertMedication): Promise<Medication> {
+    const [created] = await db.insert(medications).values(data).returning();
+    return created;
+  }
+
+  async updateMedication(id: number, data: Partial<InsertMedication>): Promise<Medication | undefined> {
+    const [updated] = await db.update(medications).set(data).where(eq(medications.id, id)).returning();
+    return updated || undefined;
+  }
+
+  async deleteMedication(id: number): Promise<void> {
+    await db.delete(medications).where(eq(medications.id, id));
   }
 }
 
