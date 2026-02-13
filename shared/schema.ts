@@ -20,6 +20,19 @@ export const pets = pgTable("pets", {
   avatarUrl: text("avatar_url"),
   color: text("color"),
   gender: text("gender"),
+  microchipNumber: text("microchip_number"),
+  microchipLocation: text("microchip_location"),
+  vetName: text("vet_name"),
+  fatherName: text("father_name"),
+  motherName: text("mother_name"),
+  hairLength: text("hair_length"),
+  desexed: text("desexed"),
+  foodBrand: text("food_brand"),
+  perMealAmount: text("per_meal_amount"),
+  mealsPerDay: text("meals_per_day"),
+  yearlyVaccinationDate: text("yearly_vaccination_date"),
+  foodBowlColour: text("food_bowl_colour"),
+  traits: text("traits"),
 });
 
 export const petRelations = relations(pets, ({ many }) => ({

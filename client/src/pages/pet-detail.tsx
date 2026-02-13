@@ -95,6 +95,24 @@ function getVaccinationStatus(vax: Vaccination): { label: string; variant: "defa
   return { label: "Current", variant: "secondary", icon: CheckCircle2 };
 }
 
+function ProfileField({ label, value, testId }: { label: string; value: string | null | undefined; testId: string }) {
+  return (
+    <div className="py-2.5 border-b last:border-b-0" data-testid={testId}>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium mt-0.5">{value || <span className="text-muted-foreground italic">Not set</span>}</p>
+    </div>
+  );
+}
+
+function ProfileSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{title}</p>
+      <div>{children}</div>
+    </div>
+  );
+}
+
 function WeightDialog({
   open,
   onOpenChange,
@@ -183,6 +201,19 @@ function EditPetDialog({
   const [color, setColor] = useState(pet.color || "");
   const [dateOfBirth, setDateOfBirth] = useState(pet.dateOfBirth || "");
   const [avatarUrl, setAvatarUrl] = useState(pet.avatarUrl || "");
+  const [microchipNumber, setMicrochipNumber] = useState(pet.microchipNumber || "");
+  const [microchipLocation, setMicrochipLocation] = useState(pet.microchipLocation || "");
+  const [vetName, setVetName] = useState(pet.vetName || "");
+  const [fatherName, setFatherName] = useState(pet.fatherName || "");
+  const [motherName, setMotherName] = useState(pet.motherName || "");
+  const [hairLength, setHairLength] = useState(pet.hairLength || "");
+  const [desexed, setDesexed] = useState(pet.desexed || "");
+  const [foodBrand, setFoodBrand] = useState(pet.foodBrand || "");
+  const [perMealAmount, setPerMealAmount] = useState(pet.perMealAmount || "");
+  const [mealsPerDay, setMealsPerDay] = useState(pet.mealsPerDay || "");
+  const [yearlyVaccinationDate, setYearlyVaccinationDate] = useState(pet.yearlyVaccinationDate || "");
+  const [foodBowlColour, setFoodBowlColour] = useState(pet.foodBowlColour || "");
+  const [traits, setTraits] = useState(pet.traits || "");
 
   const { uploadFile, isUploading } = useUpload({
     onSuccess: (response) => {
@@ -207,7 +238,7 @@ function EditPetDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit {pet.name}</DialogTitle>
         </DialogHeader>
@@ -220,6 +251,19 @@ function EditPetDialog({
               color: color || null,
               dateOfBirth: dateOfBirth || null,
               avatarUrl: avatarUrl || null,
+              microchipNumber: microchipNumber || null,
+              microchipLocation: microchipLocation || null,
+              vetName: vetName || null,
+              fatherName: fatherName || null,
+              motherName: motherName || null,
+              hairLength: hairLength || null,
+              desexed: desexed || null,
+              foodBrand: foodBrand || null,
+              perMealAmount: perMealAmount || null,
+              mealsPerDay: mealsPerDay || null,
+              yearlyVaccinationDate: yearlyVaccinationDate || null,
+              foodBowlColour: foodBowlColour || null,
+              traits: traits || null,
             });
           }}
           className="space-y-4"
@@ -238,6 +282,8 @@ function EditPetDialog({
               </label>
             </div>
           </div>
+
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Basic Info</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Name *</Label>
@@ -275,14 +321,93 @@ function EditPetDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Color</Label>
+              <Label>Hair Colour</Label>
               <Input value={color} onChange={(e) => setColor(e.target.value)} data-testid="input-edit-pet-color" />
             </div>
             <div className="space-y-1.5">
-              <Label>Date of Birth</Label>
-              <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+              <Label>Hair Length</Label>
+              <Input value={hairLength} onChange={(e) => setHairLength(e.target.value)} placeholder="e.g. Short, Long" data-testid="input-edit-pet-hair-length" />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Date of Birth</Label>
+              <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} data-testid="input-edit-pet-dob" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Desexed</Label>
+              <Select value={desexed} onValueChange={setDesexed}>
+                <SelectTrigger data-testid="select-edit-pet-desexed"><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Yes">Yes</SelectItem>
+                  <SelectItem value="No">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-2">Microchip & Vet</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Microchip #</Label>
+              <Input value={microchipNumber} onChange={(e) => setMicrochipNumber(e.target.value)} placeholder="Chip number" data-testid="input-edit-pet-microchip" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Microchip Location</Label>
+              <Input value={microchipLocation} onChange={(e) => setMicrochipLocation(e.target.value)} placeholder="e.g. Back of Neck" data-testid="input-edit-pet-microchip-location" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Vet Name</Label>
+              <Input value={vetName} onChange={(e) => setVetName(e.target.value)} placeholder="Regular vet" data-testid="input-edit-pet-vet" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Yearly Vaccination Date</Label>
+              <Input value={yearlyVaccinationDate} onChange={(e) => setYearlyVaccinationDate(e.target.value)} placeholder="e.g. 23 November" data-testid="input-edit-pet-yearly-vax" />
+            </div>
+          </div>
+
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-2">Family</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Father's Name</Label>
+              <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} data-testid="input-edit-pet-father" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Mother's Name</Label>
+              <Input value={motherName} onChange={(e) => setMotherName(e.target.value)} data-testid="input-edit-pet-mother" />
+            </div>
+          </div>
+
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-2">Feeding</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Food Brand</Label>
+              <Input value={foodBrand} onChange={(e) => setFoodBrand(e.target.value)} data-testid="input-edit-pet-food-brand" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Per Meal Amount</Label>
+              <Input value={perMealAmount} onChange={(e) => setPerMealAmount(e.target.value)} placeholder="e.g. 150g - 200g" data-testid="input-edit-pet-meal-amount" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Meals Per Day</Label>
+              <Input value={mealsPerDay} onChange={(e) => setMealsPerDay(e.target.value)} placeholder="e.g. 2 meals (Breakfast & Dinner)" data-testid="input-edit-pet-meals-per-day" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Food Bowl Colour</Label>
+              <Input value={foodBowlColour} onChange={(e) => setFoodBowlColour(e.target.value)} data-testid="input-edit-pet-bowl-colour" />
+            </div>
+          </div>
+
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider pt-2">Personality</p>
+          <div className="space-y-1.5">
+            <Label>Traits</Label>
+            <Textarea value={traits} onChange={(e) => setTraits(e.target.value)} placeholder="Personality, behaviour, quirks..." data-testid="input-edit-pet-traits" />
+          </div>
+
           <Button type="submit" className="w-full" disabled={mutation.isPending || isUploading} data-testid="button-update-pet">
             {mutation.isPending ? "Saving..." : "Update Pet"}
           </Button>
@@ -719,6 +844,46 @@ export default function PetDetailPage() {
                 </p>
               </div>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+          <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <PawPrint className="h-4 w-4 text-muted-foreground" />
+            Profile Details
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={() => setShowEditDialog(true)} data-testid="button-edit-profile-details">
+            <Edit className="h-3.5 w-3.5 mr-1" /> Edit
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-5">
+            <ProfileSection title="Identification & Vet">
+              <ProfileField label="Microchip #" value={pet.microchipNumber} testId="text-profile-microchip" />
+              <ProfileField label="Microchip Location" value={pet.microchipLocation} testId="text-profile-microchip-location" />
+              <ProfileField label="Vet Name" value={pet.vetName} testId="text-profile-vet" />
+              <ProfileField label="Yearly Vaccination Date" value={pet.yearlyVaccinationDate} testId="text-profile-yearly-vax" />
+            </ProfileSection>
+            <ProfileSection title="Appearance">
+              <ProfileField label="Hair Colour" value={pet.color} testId="text-profile-color" />
+              <ProfileField label="Hair Length" value={pet.hairLength} testId="text-profile-hair-length" />
+              <ProfileField label="Desexed" value={pet.desexed} testId="text-profile-desexed" />
+            </ProfileSection>
+            <ProfileSection title="Family">
+              <ProfileField label="Father's Name" value={pet.fatherName} testId="text-profile-father" />
+              <ProfileField label="Mother's Name" value={pet.motherName} testId="text-profile-mother" />
+            </ProfileSection>
+            <ProfileSection title="Feeding">
+              <ProfileField label="Food Brand" value={pet.foodBrand} testId="text-profile-food-brand" />
+              <ProfileField label="Per Meal Amount" value={pet.perMealAmount} testId="text-profile-meal-amount" />
+              <ProfileField label="Meals Per Day" value={pet.mealsPerDay} testId="text-profile-meals-per-day" />
+              <ProfileField label="Food Bowl Colour" value={pet.foodBowlColour} testId="text-profile-bowl-colour" />
+            </ProfileSection>
+            <ProfileSection title="Personality">
+              <ProfileField label="Traits" value={pet.traits} testId="text-profile-traits" />
+            </ProfileSection>
           </div>
         </CardContent>
       </Card>
