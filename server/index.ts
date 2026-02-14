@@ -4,6 +4,14 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
+app.get("/health", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+  });
+});
+
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -103,4 +111,20 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     },
   );
+process.on("SIGTERM", () => {
+  log("SIGTERM received. Shutting down gracefully...", "system");
+  httpServer.close(() => {
+    log("Closed remaining connections.", "system");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", () => {
+  log("SIGINT received. Shutting down...", "system");
+  httpServer.close(() => {
+    process.exit(0);
+  });
+});
 })();
+
+
