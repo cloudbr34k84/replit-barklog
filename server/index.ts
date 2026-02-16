@@ -2,13 +2,14 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { Client } from "pg";
 
 const app = express();
 app.get("/health", (_req, res) => {
   res.status(200).json({
     status: "ok",
     uptime: process.uptime(),
-    timestamp: Date.now(),
+    dbUrlExists: !!process.env.DATABASE_URL,
   });
 });
 
@@ -70,6 +71,20 @@ app.use((req, res, next) => {
 (async () => {
   const { seedDatabase } = await import("./seed");
   await seedDatabase().catch((err) => console.error("Seed error:", err));
+
+  const dbClient = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+
+  try {
+    await dbClient.connect();
+    log("Database connection established successfully", "database");
+    await dbClient.end();
+  } catch (err) {
+    console.error("Database connection failed:", err);
+    process.exit(1);
+  }
+
 
   await registerRoutes(httpServer, app);
 
